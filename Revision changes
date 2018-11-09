@@ -1,0 +1,15 @@
+Revision 0.0.1, 2018.11.7
+1. Initial a QTableWidget with PyQt5
+2. Use xlrd to open a Excel file
+3. Use Re to filter the 'Description', 'Lccation' from original Description
+4. Create Table with QTableWidget
+5. Quantity comparison
+
+Revision 0.0.2, 2018.11.8
+1. add button to create location BOM
+2. add BOMViewer class
+3. add action when pressing 'generate Location BOM' button to switch to BOM viewer
+4. add button to write to Excel
+
+Revision 0.0.1, 2018.11.9
+1. Change file name to BOMHelper
