@@ -11,9 +11,10 @@ class Application(QWidget):
     def __init__(self):
         super(Application, self).__init__()
         self.setWindowTitle('BOM Helper')
-        self.setGeometry(400, 400, 1300, 480)
+        self.setGeometry(400, 400, 1200, 640)
 
         self.viewer = BOMViewer()
+        self.ReviewBoard = ReviewBoard()
 
         h_layout = QHBoxLayout()
         v_layout = QVBoxLayout()
@@ -24,6 +25,13 @@ class Application(QWidget):
         self.load_Btn.setText('Load')
         self.load_Btn.clicked.connect(self.load)
         h_layout.addWidget(self.load_Btn)
+
+        self.find_btn = QPushButton(self)
+        self.find_btn.setObjectName('find_btn')
+        self.find_btn.setFont(QFont("Microsoft YaHei"))
+        self.find_btn.setText('Find Difference')
+        self.find_btn.clicked.connect(self.findDiff)
+        h_layout.addWidget(self.find_btn)
 
         self.generateBOM_Btn = QPushButton(self)
         self.generateBOM_Btn.setObjectName('gntBOM_Btn')
@@ -77,6 +85,20 @@ class Application(QWidget):
                 self.generateBOM_Btn.setEnabled(True)
 
     @pyqtSlot()
+    def findDiff(self):
+        d, t = QFileDialog.getOpenFileName(self, 'Open', './', 'Excel(*.xls *.xlsx)')
+        print(d)
+        if d:
+            if not self.ReviewBoard.isVisible():
+                self.ReviewBoard.show()
+                self.ReviewBoard.findPDXDiff(d, self.items)
+            else:
+                self.ReviewBoard.close()
+                self.ReviewBoard.show()
+                self.ReviewBoard.createBOM(d, self.items)
+
+
+    @pyqtSlot()
     def generateBOM(self):
         # self.hide()
         if not self.viewer.isVisible():
@@ -102,12 +124,6 @@ class Application(QWidget):
                 self.items.append(item)
             except Exception as e:
                 print(e)
-
-            # if re.findall('(.*)\nRef', sheets.row_values(i)[7]):
-            #     item = {'PN': sheets.row_values(i)[5], 'Desc': re.findall('(.*)\nRef', sheets.row_values(i)[7]),
-            #             'Location': re.findall('RefDes:(.*)', sheets.row_values(i)[7]),
-            #             'Qty': sheets.row_values(i)[9]}
-            #     self.items.append(item)
         book.release_resources()
         del book
 
@@ -117,8 +133,9 @@ class Application(QWidget):
         i = 0
 
         for item in items:
-            newitem = QTableWidgetItem(item['PN'])
-            self.table.setItem(i, 0, newitem)
+            # print(item)
+            # newitem = QTableWidgetItem(item['PN'])
+            self.table.setItem(i, 0, QTableWidgetItem(item['PN']))
 
             # print(item['Desc'])
             des = re.findall('(.*)\nRef', item['Desc'])
@@ -131,7 +148,7 @@ class Application(QWidget):
                 self.table.setItem(i, 1, QTableWidgetItem(item['Desc']))
 
             num = re.findall('(.*).000', item['Qty'])
-
+            # print(num)
             if num:
                 newitem = QTableWidgetItem(num[0])
                 newitem.setTextAlignment(Qt.AlignCenter)
@@ -154,6 +171,7 @@ class Application(QWidget):
                 self.table.setItem(i, 4, newitem)
 
             string = re.findall('RefDes:(.*)', item['Desc'])
+            # print(string)
             if string:
                 locations = string[0]
                 lo_num = len(locations.split(','))
@@ -181,7 +199,7 @@ class BOMViewer(QWidget):
     def __init__(self):
         super(BOMViewer, self).__init__()
         self.setWindowTitle('BOM Viewer')
-        self.setGeometry(410, 410, 1200, 480)
+        self.setGeometry(410, 410, 1200, 640)
 
         v_layout = QVBoxLayout(self)
 
@@ -221,6 +239,8 @@ class BOMViewer(QWidget):
 
     def createBOM(self, name, items):
         i = 0
+        misc = list()
+
         if name is not None:
             self.b_name = name
             self.bom_lb.setText('Location BOM: ' + name)
@@ -247,9 +267,19 @@ class BOMViewer(QWidget):
                         'Qty': qty}
                 self.BOM.append(item)
                 i = i + 1
-
+            if re.findall('^PCB,|^FW(.*)', item['Desc']):
+                # print(item)
+                self.table.setItem(i, 0, QTableWidgetItem(item['PN']))
+                self.table.setItem(i, 1, QTableWidgetItem(item['Desc']))
+                t = QTableWidgetItem(re.findall('(.*).000', item['Qty'])[0])
+                t.setTextAlignment(Qt.AlignCenter)
+                self.table.setItem(i, 3, t)
+                item = {'PN': item['PN'], 'Desc': item['Desc'], 'Qty': re.findall('(.*).000', item['Qty'])[0]}
+                i = i + 1
+                misc.append(item)
         # Change to actual displaying rows.
         self.table.setRowCount(i)
+        self.BOM = self.BOM + misc
 
         # Retrieve insertion parts and SMT parts
         for b in self.BOM:
@@ -258,9 +288,13 @@ class BOMViewer(QWidget):
                 d = {'PN': b['PN'], 'Desc': b['Desc'], 'Location': b['Location'], 'Qty': b['Qty']}
                 self.SMTs.append(d)
             else:
-                d = {'PN': b['PN'], 'Desc': b['Desc'], 'Location': b['Location'], 'Qty': b['Qty']}
+                # print(b)
+                if not re.findall('^PCB,|^FW(.*)', b['Desc']):
+                    d = {'PN': b['PN'], 'Desc': b['Desc'], 'Location': b['Location'], 'Qty': b['Qty']}
+                else:
+                    print(b)
+                    d = {'PN': b['PN'], 'Desc': b['Desc'], 'Qty': b['Qty']}
                 self.insertions.append(d)
-
 
     @pyqtSlot()
     def createExcel(self):
@@ -333,8 +367,10 @@ class BOMViewer(QWidget):
                         sheet.write(i + k, 0, k, style)
                         sheet.write(i + k, 1, p['PN'], style)
                         sheet.write(i + k, 2, p['Desc'], style)
-                        sheet.write(i + k, 3, p['Location'], style)
                         sheet.write(i + k, 4, p['Qty'], style)
+                        if not re.findall('PCB,(.*)', p['Desc']):
+                            sheet.write(i + k, 3, p['Location'], style)
+
                     except Exception as e:
                         print('Exception in writing to Excel: ', e)
                     k = k + 1
@@ -353,6 +389,121 @@ class BOMViewer(QWidget):
                         print('Exception in writing to Excel: ', e)
                     k = k + 1
                 wb.save(f)
+
+
+class ReviewBoard(QTableWidget):
+    def __init__(self):
+        super(ReviewBoard, self).__init__()
+        self.setWindowTitle('Review Board')
+        self.setGeometry(400, 400, 1400, 320)
+
+        # self.setRowCount(10)
+        self.setColumnCount(4)
+        self.setFont(QFont("Microsoft YaHei"))
+        self.setHorizontalHeaderLabels(['Part number', 'Current', 'Reference', 'Comments'])
+
+        # Description column
+        self.setColumnWidth(1, 550)
+        # Qty column
+        self.setColumnWidth(2, 550)
+        # Comment column
+        self.setColumnWidth(3, 200)
+
+        self.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+        self.BOM = list()
+
+    def findPDXDiff(self, path, diff):
+        self.BOM = list()
+        self.clearContents()
+        if len(diff) and path:
+            rb = xlrd.open_workbook(path)
+            sheets = rb.sheet_by_index(0)
+            rows = sheets.nrows
+
+            self.setRowCount(rows - 6)
+
+            for i in range(7, rows):
+                try:
+                    item = {'PN': sheets.row_values(i)[5], 'Desc': sheets.row_values(i)[7],
+                            'Qty': sheets.row_values(i)[9]}
+                    # print(item)
+                    self.BOM.append(item)
+                except Exception as e:
+                    print(e)
+            rb.release_resources()
+            del rb
+            #
+            # print(self.BOM)
+            # print(diff)
+
+            i = 0
+            f = False
+            p_err = list()
+            d_err = list()
+            q_err = list()
+            err = 0
+            for p in self.BOM:
+                for d in diff:
+                    if p['PN'] == d['PN']:
+                        f = True
+                        break
+                if f:
+                    f = False
+
+                    if p['Desc'] == d['Desc']:
+                        if p['Qty'] == d['Qty']:
+                            i = i + 1
+                        else:
+                            print(p['Qty'], d['Qty'])
+                            item = {'PN': p['PN'], 'cur': p['Qty'], 'ref': d['Qty']}
+                            q_err.append(item)
+                            err = err + 1
+                    else:
+                        print(p['Desc'], d['Desc'])
+                        item = {'PN': p['PN'], 'cur': p['Desc'], 'ref': d['Desc']}
+                        d_err.append(item)
+                        err = err + 1
+                else:
+                    print(p['PN'], d['PN'])
+                    item = {'PN': p['PN'], 'cur': p['PN'], 'ref': d['PN']}
+                    p_err.append(item)
+                    err = err + 1
+
+            print('showing difference')
+
+            i = 0
+            if len(p_err):
+                print('Part number Error:', len(p_err))
+                for p in p_err:
+                    self.setItem(i, 0, QTableWidgetItem(p['PN']))
+                    self.setItem(i, 1, QTableWidgetItem(p['cur']))
+                    self.setItem(i, 2, QTableWidgetItem(p['ref']))
+                    self.setItem(i, 3, QTableWidgetItem('Part number difference'))
+                    i = i + 1
+
+            if len(d_err):
+                print('Description Error:', len(d_err))
+                for p in d_err:
+                    self.setItem(i, 0, QTableWidgetItem(p['PN']))
+                    self.setItem(i, 1, QTableWidgetItem(p['cur']))
+                    self.setItem(i, 2, QTableWidgetItem(p['ref']))
+                    self.setItem(i, 3, QTableWidgetItem('Description difference'))
+                    i = i + 1
+
+            if len(q_err):
+                print('Quantity Error:', len(p_err))
+                for p in q_err:
+                    self.setItem(i, 0, QTableWidgetItem(p['PN']))
+                    self.setItem(i, 1, QTableWidgetItem(p['cur']))
+                    self.setItem(i, 2, QTableWidgetItem(p['ref']))
+                    self.setItem(i, 3, QTableWidgetItem('Quantity difference'))
+                    i = i + 1
+            self.setRowCount(err)
+            QMessageBox.information(self, "Result", "Find " + str(err) + ' Differnce')
+
+        else:
+            QMessageBox.information(self, "Warning", 'Please load a PDX BOM firstly')
 
 
 if __name__ == '__main__':
