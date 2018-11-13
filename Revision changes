@@ -11,5 +11,35 @@ Revision 0.0.2, 2018.11.8
 3. add action when pressing 'generate Location BOM' button to switch to BOM viewer
 4. add button to write to Excel
 
-Revision 0.0.1, 2018.11.9
+Revision 0.0.3, 2018.11.9
 1. Change file name to BOMHelper
+2. Add a label on main window to show file path
+3. Add a variance to store file BOM name
+4. Add blank quantity check and mechanical part number check.
+5. Add codes to switch displaying while different PDX BOMs file loaded.
+
+Revision 0.0.4, 2018.11.10
+1. Fix bug write to excel
+2. Add codes to adjust Excel column width and cell style.
+3. Add button to find difference in 2 PDX BOM
+
+Revision 0.0.5, 2018.11.11
+1. in Class Application, filter function, add code to change number to string
+                item = {'PN': sheets.row_values(i)[5], 'Desc': sheets.row_values(i)[7],
+                        'Qty': str(sheets.row_values(i)[9])}
+
+2. for quantity, use:
+    'num = float(item['Qty'])'', replace 'num = re.findall('(\d).\d', item['Qty'])'
+3. for Location qunatity comparison, add:
+    num = float(item['Qty']) instead of num = re.findall('(\d).\d', item['Qty'])
+
+4. In Class ReviewBoard add branch to judge if description is wrong and quantity is also wrong case
+
+5. Fix if cannot find part number, string show a same part number.
+
+Revision 0.0.6, 2018.11.11
+1. complete function of findBOMDiff in ReviewBoard class
+2. add BOM type check for PDX BOM and Location BOM
+    a. for PDX BOM must include 'Part Bill of Materials (Markup)' --> Application class
+    b. for Location BOM must include 'LOCATION' or 'location' --> BOMViwer class
+
