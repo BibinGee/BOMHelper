@@ -11,7 +11,7 @@ class Application(QWidget):
     def __init__(self):
         super(Application, self).__init__()
         self.setWindowTitle('BOM Helper Beta 1.0    Author: Daniel Gee')
-        self.setGeometry(400, 400, 1200, 640)
+        self.setGeometry(50, 50, 1200, 640)
 
         self.viewer = BOMViewer()
         self.reviewBoard = ReviewBoard()
@@ -76,7 +76,7 @@ class Application(QWidget):
     def load(self):
         d, t = QFileDialog.getOpenFileName(self, 'Open', './', 'Excel(*.xls *.xlsx)')
         print(d)
-        if d.find('Part Bill of Materials (Markup)') > 0:
+        if d.find('Subassy') > 0:
             self.path_lb.setText(d)
             self.bom_name = re.findall('assy (.*) .', d)[0]
             # print(self.bom_name)
@@ -96,7 +96,7 @@ class Application(QWidget):
     def findDiff(self):
         d, t = QFileDialog.getOpenFileName(self, 'Open', './', 'Excel(*.xls *.xlsx)')
         print(d)
-        if d.find('Part Bill of Materials (Markup)') > 0:
+        if d.find('Subassy') > 0:
             if not self.reviewBoard.isVisible():
                 self.reviewBoard.show()
                 self.reviewBoard.findPDXDiff(d, self.items)
@@ -123,16 +123,58 @@ class Application(QWidget):
         book = xlrd.open_workbook(d)
         sheets = book.sheet_by_index(0)
         rows = sheets.nrows
-        self.table.setRowCount(rows - 6)
-
-        for i in range(7, rows):
-            try:
-                item = {'PN': sheets.row_values(i)[5], 'Desc': sheets.row_values(i)[7],
-                        'Qty': str(sheets.row_values(i)[9])}
-                # print(item)
-                self.items.append(item)
-            except Exception as e:
-                print(e)
+        self.table.setRowCount(rows)
+        for i in range(rows):
+            string = sheets.row_values(i)
+            k = 0
+            for s in string:
+                if isinstance(s, str):
+##                    pn = re.findall('\d\d\d\d-(.*)', s)
+                    if len(re.findall('\d\d\d\d-\d\d\d\d', s)):
+                        if len(string[k + 2]):
+                            item = {'PN': string[k], 'Desc': string[k + 2], 'Qty': str(string[k + 4])}
+                            self.items.append(item)
+##                  To match Part number like: 2579-PG01  
+                    elif len(re.findall('\d\d\d\d-\S\S\d\d', s)):
+                        if len(string[k + 2]):
+                            item = {'PN': string[k], 'Desc': string[k + 2], 'Qty': str(string[k + 4])}
+                            self.items.append(item)
+##                  To match EW part number   
+                    elif len(re.findall('\d\d\d\d\d\d\d', s)):
+                        if len(string[k + 2]):
+                            item = {'PN': string[k], 'Desc': string[k + 2], 'Qty': str(string[k + 4])}
+                            self.items.append(item)
+##                  To match part number like S614A-5101          
+                    elif len(re.findall('\d\d\S-\d\d\d\d', s)):
+                        if len(string[k + 2]):
+                            item = {'PN': string[k], 'Desc': string[k + 2], 'Qty': str(string[k + 4])}
+                            self.items.append(item)
+##                  To match part number like S6152-B472
+                    elif len(re.findall('\d\d\d-\S\d\d\d', s)):
+                        if len(string[k + 2]):
+                            item = {'PN': string[k], 'Desc': string[k + 2], 'Qty': str(string[k + 4])}
+                            self.items.append(item)
+##                  To match part number like S66B1-2104
+                    elif len(re.findall('\d\S\d-\d\d\d\d', s)):
+                        if len(string[k + 2]):
+                            item = {'PN': string[k], 'Desc': string[k + 2], 'Qty': str(string[k + 4])}
+                            self.items.append(item)
+##                  To match part number like S66B1-B157
+                    elif len(re.findall('\d\S\d-\S\d\d\d', s)):
+                        if len(string[k + 2]):
+                            item = {'PN': string[k], 'Desc': string[k + 2], 'Qty': str(string[k + 4])}
+                            self.items.append(item) 
+                k = k + 1
+        print(self.items)
+##        for i in range(7, rows):
+##            try:
+##                item = {'PN': sheets.row_values(i)[5], 'Desc': sheets.row_values(i)[7],
+##                        'Qty': str(sheets.row_values(i)[9])}
+##                # print(item)
+##                self.items.append(item)
+##            except Exception as e:
+##                print(e)
+                
         book.release_resources()
         del book
 
@@ -143,7 +185,7 @@ class Application(QWidget):
         err = 0
 
         for item in items:
-            # print(item)
+            print(item)
             # newitem = QTableWidgetItem(item['PN'])
             self.table.setItem(i, 0, QTableWidgetItem(item['PN']))
 
