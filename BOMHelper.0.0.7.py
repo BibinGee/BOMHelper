@@ -167,6 +167,7 @@ class Application(QWidget):
                     # To match EW part number
                     elif len(re.findall('\d\d\d\d\d\d\d', s)):
                         if len(string[k + 2]):
+                            item = {'PN': string[header_pos['Number']],
                                     'Desc': string[header_pos['Name']],
                                     'Qty': str(string[header_pos['Qty']])}
                             self.items.append(item)
