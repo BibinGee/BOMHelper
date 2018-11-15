@@ -123,6 +123,7 @@ class Application(QWidget):
         book = xlrd.open_workbook(d)
         sheets = book.sheet_by_index(0)
         rows = sheets.nrows
+        print(rows)
         self.table.setRowCount(rows)
 
         header_pos = dict()
@@ -145,70 +146,17 @@ class Application(QWidget):
         print(header_pos)
         for i in range(st_row + 1, rows):
             string = sheets.row_values(i)
-            k = 0
-            for s in string:
-                if isinstance(s, str):
-                    # pn = re.findall('\d\d\d\d-(.*)', s)
-                    if len(re.findall('\d\d\d\d-\d\d\d\d', s)):
-                        if len(string[k + 2]):
-                            item = {'PN': string[header_pos['Number']],
-                                    'Desc': string[header_pos['Name']],
-                                    'Qty': str(string[header_pos['Qty']])}
-                            self.items.append(item)
-                            break
-                    # To match Part number like: 2579-PG01
-                    elif len(re.findall('\d\d\d\d-\S\S\d\d', s)):
-                        if len(string[k + 2]):
-                            item = {'PN': string[header_pos['Number']],
-                                    'Desc': string[header_pos['Name']],
-                                    'Qty': str(string[header_pos['Qty']])}
-                            self.items.append(item)
-                            break
-                    # To match EW part number
-                    elif len(re.findall('\d\d\d\d\d\d\d', s)):
-                        if len(string[k + 2]):
-                            item = {'PN': string[header_pos['Number']],
-                                    'Desc': string[header_pos['Name']],
-                                    'Qty': str(string[header_pos['Qty']])}
-                            self.items.append(item)
-                            break
-                    # To match part number like S614A-5101
-                    elif len(re.findall('\d\d\S-\d\d\d\d', s)):
-                        if len(string[k + 2]):
-                            item = {'PN': string[header_pos['Number']],
-                                    'Desc': string[header_pos['Name']],
-                                    'Qty': str(string[header_pos['Qty']])}
-                            self.items.append(item)
-                            break
-                    # To match part number like S6152-B472
-                    elif len(re.findall('\d\d\d-\S\d\d\d', s)):
-                        if len(string[k + 2]):
-                            item = {'PN': string[header_pos['Number']],
-                                    'Desc': string[header_pos['Name']],
-                                    'Qty': str(string[header_pos['Qty']])}
-                            self.items.append(item)
-                            break
-                    # To match part number like S66B1-2104
-                    elif len(re.findall('\d\S\d-\d\d\d\d', s)):
-                        if len(string[k + 2]):
-                            item = {'PN': string[header_pos['Number']],
-                                    'Desc': string[header_pos['Name']],
-                                    'Qty': str(string[header_pos['Qty']])}
-                            self.items.append(item)
-                    # To match part number like S66B1-B157
-                    elif len(re.findall('\d\S\d-\S\d\d\d', s)):
-                        if len(string[k + 2]):
-                            item = {'PN': string[header_pos['Number']],
-                                    'Desc': string[header_pos['Name']],
-                                    'Qty': str(string[header_pos['Qty']])}
-                            self.items.append(item)
-                            break
-                k = k + 1
-        # print(self.items)
+            if len(string[header_pos['Number']]):
+                item = {'PN': string[header_pos['Number']],
+                        'Desc': string[header_pos['Name']],
+                        'Qty': str(string[header_pos['Qty']])}
+                self.items.append(item)
+            if i == rows-1:
+                print(string[header_pos['Number']])
 
         book.release_resources()
         del book
-
+        # print(self.items)
         self.table.clearContents()
         self.table.setRowCount(200)
         self.fillTable(self.items)
@@ -223,6 +171,7 @@ class Application(QWidget):
             self.table.setItem(i, 0, QTableWidgetItem(item['PN']))
 
             # print(item['Desc'])
+            # Retrieve description, exclude Location
             des = re.findall('(.*)\nRef', item['Desc'])
             # print(des)
             if des:
@@ -579,11 +528,29 @@ class ReviewBoard(QTableWidget):
 
             # set a initial row count
             self.setRowCount(200)
+            header_pos = dict()
+            st_row = 0
+            for i in range(rows):
+                string = sheets.row_values(i)
+                k = 0
+                for s in string:
+                    if isinstance(s, str):
+                        if s == 'Number':
+                            header_pos['Number'] = k
+                            st_row = i
+                        elif s == 'Name':
+                            header_pos['Name'] = k
+                        elif s == 'Quantity':
+                            header_pos['Qty'] = k
+                    k = k + 1
+                if st_row != 0:
+                    break
 
-            for i in range(7, rows):
+            for i in range(st_row + 1, rows):
                 try:
-                    item = {'PN': sheets.row_values(i)[5], 'Desc': sheets.row_values(i)[7],
-                            'Qty': sheets.row_values(i)[9]}
+                    item = {'PN': sheets.row_values(i)[header_pos['Number']],
+                            'Desc': sheets.row_values(i)[header_pos['Name']],
+                            'Qty': sheets.row_values(i)[header_pos['Qty']]}
                     # print(item)
                     self.BOM.append(item)
                 except Exception as e:
@@ -597,8 +564,8 @@ class ReviewBoard(QTableWidget):
             d_err = list()
             q_err = list()
             err = 0
-            for p in self.BOM:
-                for d in cur_pdxbom:
+            for p in cur_pdxbom:
+                for d in self.BOM:
                     if p['PN'] == d['PN']:
                         f = True
                         break
@@ -609,7 +576,7 @@ class ReviewBoard(QTableWidget):
                         if float(p['Qty']) == float(d['Qty']):
                             i = i + 1
                         else:
-                            print(p['Qty'], '\n', d['Qty'])
+                            print('cur pdx BOM: ' + p['Qty'], '\n', 'referred BOM: ' + d['Qty'])
                             item = {'PN': p['PN'], 'cur': p['Desc'] + ' --> ' + str(float(p['Qty'])),
                                     'ref': d['Desc'] + ' --> ' + str(float(d['Qty']))}
                             q_err.append(item)

@@ -53,3 +53,7 @@ Revision 0.0.7, 2018.11.14
 2. in BOMViewer class:
     a. add code to pick up PCB part number to SMT parts
     b. add code to pick up FW part number to insertion parts
+
+Revision 0.0.8, 2018.11.15
+1. Fix bug in Find PDX difference
+2. change showing position of BOMViwer and ReviweBoard class.
