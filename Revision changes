@@ -37,9 +37,19 @@ Revision 0.0.5, 2018.11.11
 
 5. Fix if cannot find part number, string show a same part number.
 
-Revision 0.0.6, 2018.11.11
+Revision 0.0.6, 2018.11.13
 1. complete function of findBOMDiff in ReviewBoard class
 2. add BOM type check for PDX BOM and Location BOM
     a. for PDX BOM must include 'Part Bill of Materials (Markup)' --> Application class
     b. for Location BOM must include 'LOCATION' or 'location' --> BOMViwer class
 
+Revision 0.0.7, 2018.11.14
+1. in Application class, change the way to load part number information:
+    a. add code to search header position: 'Number', 'Name', 'Quantity'
+    b. add code to change the way to load part number information
+        i. add pattern to match different FHK part number
+        ii. add code to show initial row count of 200 lines
+    c. add code to wrap table content
+2. in BOMViewer class:
+    a. add code to pick up PCB part number to SMT parts
+    b. add code to pick up FW part number to insertion parts
