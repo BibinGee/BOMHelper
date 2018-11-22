@@ -57,3 +57,6 @@ Revision 0.0.7, 2018.11.14
 Revision 0.0.8, 2018.11.15
 1. Fix bug in Find PDX difference
 2. change showing position of BOMViwer and ReviweBoard class.
+
+Revision 0.0.9, 2018.11.18
+1. add code to retrieve all posible part number when openning a location bom
