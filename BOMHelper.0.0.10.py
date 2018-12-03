@@ -367,6 +367,10 @@ class BOMViewer(QWidget):
             if p:
                 d = {'PN': b['PN'], 'Desc': b['Desc'], 'Location': b['Location'], 'Qty': b['Qty']}
                 self.SMTs.append(d)
+            elif re.match ('.*(SMD)|(SMT).*', b['Desc']) is not None:
+                print(b)
+                d = {'PN': b['PN'], 'Desc': b['Desc'], 'Location': b['Location'], 'Qty': b['Qty']}
+                self.SMTs.append(d)
             else:
                 # print(b)
                 if not re.findall('^PCB,|^FW(.*)', b['Desc']):
@@ -500,6 +504,7 @@ class BOMViewer(QWidget):
                         print('Exception in writing to Excel: ', e)
                     k = k + 1
                 wb.save(f)
+                QMessageBox.information (self, "Complete", 'Location save complete!!')
 
 
 class ReviewBoard(QTableWidget):
