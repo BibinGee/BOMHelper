@@ -414,14 +414,14 @@ class BOMViewer(QWidget):
                 style.font = font
 
                 # Location BOM title
-                sheet.write_merge(0, 1, 0, 4, 'Location BOM', style)
+                sheet.write_merge(0, 1, 0, 6, 'Location BOM', style)
                 sheet.write_merge(2, 2, 0, 1, 'PCBA part number:', style)
-                sheet.write(2, 2, self.b_name.split(' ')[0], style)
+                sheet.write_merge(2, 2, 2, 4, self.b_name.split(' ')[0], style)
                 sheet.write_merge(3, 3, 0, 1, 'PCBA Description:', style)
-                sheet.write(3, 2, 'PCBA ASSY. of ' + self.b_name.split(' ')[0], style)
-                sheet.write_merge(2, 3, 3, 4, 'Rev' + self.b_name.split(' ')[-1], style)
+                sheet.write_merge(3, 3, 2, 4,  'PCBA ASSY. of ' + self.b_name.split(' ')[0], style)
+                sheet.write_merge(2, 3, 5, 6, 'Rev' + self.b_name.split(' ')[-1], style)
 
-                sheet.write_merge(4, 4, 0, 4, '', style)
+                sheet.write_merge(4, 4, 0, 6, '', style)
 
                 # Location BOM header
                 sheet.write(5, 0, 'Index', style)
@@ -432,11 +432,17 @@ class BOMViewer(QWidget):
                 sheet.col(2).width = 256 * 60
                 sheet.write(5, 2, 'Description', style)
 
-                sheet.col(3).width = 256 * 30
-                sheet.write(5, 3, 'Location', style)
+                sheet.col(3).width = 256 * 6
+                sheet.write(5, 3, 'Qty', style)
 
-                sheet.col(4).width = 256 * 6
-                sheet.write(5, 4, 'Qty', style)
+                sheet.col(4).width = 256 * 30
+                sheet.write(5, 4, 'Loaction', style)
+
+                sheet.col(5).width = 256 * 10
+                sheet.write(5, 5, 'Position', style)
+
+                sheet.col(6).width = 256 * 10
+                sheet.write(5, 6, 'Remark', style)
 
                 # setup cell style
                 align2 = xlwt.Alignment()
@@ -453,7 +459,7 @@ class BOMViewer(QWidget):
 
                 # fill with insertion parts
                 i = 6
-                sheet.write_merge(i, i, 0, 4, 'Insertion Parts', style)
+                sheet.write_merge(i, i, 0, 6, 'Insertion Parts', style)
                 # i = i + 1
                 k = 1
                 for p in self.insertions:
@@ -461,18 +467,20 @@ class BOMViewer(QWidget):
                         sheet.write(i + k, 0, k, style)
                         sheet.write(i + k, 1, p['PN'], style)
                         sheet.write(i + k, 2, p['Desc'], style)
-                        sheet.write(i + k, 4, p['Qty'], style)
+                        sheet.write(i + k, 3, p['Qty'], style)
                         if 'Location' in p:
-                            sheet.write(i + k, 3, p['Location'], style)
+                            sheet.write(i + k, 4, p['Location'], style)
                         else:
-                            sheet.write(i + k, 3, '', style)
-
+                            sheet.write(i + k, 4, '', style)
+                        
+                        sheet.write(i + k, 5, 'MI', style)
+                        sheet.write(i + k, 6, '', style)
                     except Exception as e:
                         print('Exception in writing to Excel: ', e)
                     k = k + 1
 
                 # fill with SMT parts
-                sheet.write_merge(i + k, i + k, 0, 4, 'SMT Parts', style)
+                sheet.write_merge(i + k, i + k, 0, 6, 'SMT Parts', style)
                 i = i + k
                 k = 1
                 for p in self.SMTs:
@@ -480,12 +488,14 @@ class BOMViewer(QWidget):
                         sheet.write(i + k, 0, k, style)
                         sheet.write(i + k, 1, p['PN'], style)
                         sheet.write(i + k, 2, p['Desc'], style)
-                        
+                        sheet.write(i + k, 3, p['Qty'], style)
                         if 'Location' in p:
-                            sheet.write(i + k, 3, p['Location'], style)
+                            sheet.write(i + k, 4, p['Location'], style)
                         else:
-                            sheet.write(i + k, 3, '', style)
-                        sheet.write(i + k, 4, p['Qty'], style)
+                            sheet.write(i + k, 4, '', style)
+                        
+                        sheet.write(i + k, 5, 'SMT', style)
+                        sheet.write(i + k, 6, '', style)
                     except Exception as e:
                         print('Exception in writing to Excel: ', e)
                     k = k + 1
