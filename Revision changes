@@ -59,4 +59,15 @@ Revision 0.0.8, 2018.11.15
 2. change showing position of BOMViwer and ReviweBoard class.
 
 Revision 0.0.9, 2018.11.18
-1. add code to retrieve all posible part number when openning a location bom
+1. add code to retrieve all possible part number when opening a location bom
+
+Revision 0.0.10, 2018.12.14
+1. Add 'Remark' column to 'Excel' file
+
+Revision 0.0.11, 2018.12.14
+1. Change the key word to open PDX BOM from 'Subassy' to 'Part Bill of Materials'
+2. Add key word 'Firmware' when creating Location BOM and Excel file
+
+
+Revision 0.0.12, 2018.12.21
+1. Add 'Subassy' key word when openning a PDX BOM
